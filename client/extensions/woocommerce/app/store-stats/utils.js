@@ -64,23 +64,33 @@ export function calculateDelta( item, previousItem, attr, unit ) {
 }
 
 /**
- * Given a startDate query parameter, determine which date to send the backend on a request for data.
- * Calculate a queryDate as the first date in each block of periods counting back from today. The number
+ * Calculate a date as the first date in each block of periods counting back from today. The number
  * of periods in a block is determined in the UNITS constants config.
+ *
+ * @param {string} date - Date to calculate from
+ * @param {string} unit - Unit to use in calculation
+ * @return {string} - YYYY-MM-DD format of the date to be queried
+ */
+export function getStartDate( date, unit ) {
+	const unitConfig = UNITS[ unit ];
+	const today = moment();
+	const startDate = moment( date ); // Defaults to today if startDate undefined
+	const duration = moment.duration( today - startDate )[ unitConfig.durationFn ]();
+	const validDuration = duration > 0 ? duration : 0;
+	const unitQuantity = unitConfig.quantity;
+	const periods = Math.floor( validDuration / unitQuantity ) * unitQuantity;
+	return today.subtract( periods, unitConfig.label ).format( 'YYYY-MM-DD' );
+}
+
+/**
+ * Given a startDate query parameter, determine which date to send the backend on a request for data.
  *
  * @param {object} context - Object supplied by page function
  * @return {string} - YYYY-MM-DD format of the date to be queried
  */
 export function getQueryDate( context ) {
 	const { unit } = context.params;
-	const unitConfig = UNITS[ unit ];
-	const today = moment();
-	const startDate = moment( context.query.startDate ); // Defaults to today if startDate undefined
-	const duration = moment.duration( today - startDate )[ unitConfig.durationFn ]();
-	const validDuration = duration > 0 ? duration : 0;
-	const unitQuantity = unitConfig.quantity;
-	const periods = Math.floor( validDuration / unitQuantity ) * unitQuantity;
-	return today.subtract( periods, unitConfig.label ).format( 'YYYY-MM-DD' );
+	return getStartDate( context.query.startDate, unit );
 }
 
 /**

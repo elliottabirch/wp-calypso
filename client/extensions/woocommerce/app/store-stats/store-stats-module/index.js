@@ -7,7 +7,7 @@
 import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { isEqual } from 'lodash';
+import { isEqual, find } from 'lodash';
 
 /**
  * Internal dependencies
@@ -46,10 +46,17 @@ class StoreStatsModule extends Component {
 	}
 
 	render() {
-		const { header, children, data, emptyMessage, moreLink } = this.props;
+		const { header, children, data, emptyMessage, moreLink, query, statType } = this.props;
 		const { loaded } = this.state;
-		const isLoading = ! loaded && ! ( data && data.length );
-		const hasEmptyData = loaded && data && data.length === 0;
+
+		let selectedData = data;
+		if ( 'statsStoreReferrers' === statType ) {
+			const _data = find( data, d => d.date === query.date );
+			selectedData = ( _data && _data.data ) || [];
+		}
+
+		const isLoading = ! loaded && ! ( selectedData && selectedData.length );
+		const hasEmptyData = loaded && selectedData && selectedData.length === 0;
 
 		/* eslint-disable wpcalypso/jsx-classname-namespace */
 		return (

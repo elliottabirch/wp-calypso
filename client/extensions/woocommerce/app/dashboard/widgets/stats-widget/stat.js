@@ -20,7 +20,7 @@ import {
 	getDelta,
 	getEndPeriod,
 } from 'woocommerce/app/store-stats/utils';
-import Sparkline from 'woocommerce/components/sparkline';
+import Sparkline from 'woocommerce/components/d3/sparkline';
 import { UNITS } from 'woocommerce/app/store-stats/constants';
 
 class Stat extends Component {

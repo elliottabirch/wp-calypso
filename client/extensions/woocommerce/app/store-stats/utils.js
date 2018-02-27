@@ -4,7 +4,7 @@
  * External dependencies
  */
 
-import { find, includes } from 'lodash';
+import { find, includes, sortBy } from 'lodash';
 import classnames from 'classnames';
 import { moment } from 'i18n-calypso';
 
@@ -154,4 +154,8 @@ export function formatValue( value, format, code ) {
 export function getDelta( deltas, selectedDate, stat ) {
 	const selectedDeltas = find( deltas, item => item.period === selectedDate );
 	return selectedDeltas[ stat ];
+}
+
+export function sortAndTrimEventData( data, limit ) {
+	return sortBy( data, d => -d.sales ).slice( 0, limit || 5 );
 }

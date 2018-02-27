@@ -149,7 +149,24 @@ class StatsWidget extends Component {
 	};
 
 	renderReferrers = () => {
-		return <div className="stats-widget__box-contents">Referrers</div>;
+		const { site, translate, dashboardTimePeriod } = this.props;
+
+		const values = [
+			{ key: 'referrer', title: translate( 'Referrer' ), format: 'text' },
+			{ key: 'product_views', title: translate( 'Referrals' ), format: 'text' },
+			{ key: 'sales', title: translate( 'Sales' ), format: 'currency' },
+		];
+
+		return (
+			<List
+				site={ site }
+				statSlug="referrers"
+				statType="statsStoreReferrers"
+				unit={ dashboardTimePeriod }
+				values={ values }
+				emptyMessage={ translate( 'No referral activity has been recorded for this time period.' ) }
+			/>
+		);
 	};
 
 	renderProducts = () => {
@@ -167,6 +184,7 @@ class StatsWidget extends Component {
 				statType="statsTopEarners"
 				unit={ dashboardTimePeriod }
 				values={ values }
+				emptyMessage={ translate( 'No products have been sold in this time period.' ) }
 			/>
 		);
 	};
@@ -174,14 +192,21 @@ class StatsWidget extends Component {
 	queries = () => {
 		const { site, dashboardTimePeriod } = this.props;
 
-		const unitOrderDate = getUnitPeriod(
+		const unitOrderAndReferrerDate = getUnitPeriod(
 			getStartDate( moment().format( 'YYYY-MM-DD' ), dashboardTimePeriod ),
 			dashboardTimePeriod
 		);
+
 		const orderQuery = {
 			unit: dashboardTimePeriod,
-			date: unitOrderDate,
+			date: unitOrderAndReferrerDate,
 			quantity: UNITS[ dashboardTimePeriod ].quantity,
+		};
+
+		const referrerQuery = {
+			unit: dashboardTimePeriod,
+			date: unitOrderAndReferrerDate,
+			quantity: 1,
 		};
 
 		const unitDate = getUnitPeriod( moment().format( 'YYYY-MM-DD' ), dashboardTimePeriod );
@@ -196,6 +221,7 @@ class StatsWidget extends Component {
 				<QueryPreferences />
 				<QuerySiteStats statType="statsOrders" siteId={ site.ID } query={ orderQuery } />
 				<QuerySiteStats statType="statsTopEarners" siteId={ site.ID } query={ query } />
+				<QuerySiteStats statType="statsStoreReferrers" siteId={ site.ID } query={ referrerQuery } />
 			</Fragment>
 		);
 	};

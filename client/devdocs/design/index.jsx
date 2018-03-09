@@ -9,7 +9,7 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { slugToCamelCase } from 'devdocs/docs-example/util';
 import { trim } from 'lodash';
-import Gridicons from 'gridicons/cjs/example';
+import Gridicons from 'gridicons/example';
 
 /**
  * Internal dependencies

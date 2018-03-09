@@ -5484,8 +5484,8 @@
       }
     },
     "gridicons": {
-      "version": "3.0.2-alpha",
-      "integrity": "sha512-0SpAHm65RyT1IxJPx+w+OcSDXTA+wCDzRbe6V6dx0iJ5+s7YqzslnELyEhzaCUR626flpiDbPyhawJzHMRxvjA==",
+      "version": "3.0.0-alpha.1",
+      "integrity": "sha512-iYC5fzPYd+E+ISX9B0p3mqIPVNNdlnekGcoBToQd1uKJbqsBNmpxxMZ1+vByLII37+5qnUj/oqLg5xBq6tdP6g==",
       "requires": {
         "prop-types": "15.5.10"
       }

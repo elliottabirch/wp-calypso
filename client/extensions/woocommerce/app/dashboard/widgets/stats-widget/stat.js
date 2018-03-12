@@ -19,6 +19,7 @@ import {
 	getStartDate,
 	getStartPeriod,
 	getDelta,
+	getDeltaFromData,
 	getEndPeriod,
 } from 'woocommerce/app/store-stats/utils';
 import Sparkline from 'woocommerce/components/d3/sparkline';
@@ -28,7 +29,8 @@ class Stat extends Component {
 	// TODO
 	static propTypes = {};
 
-	renderDelta = delta => {
+	// Todo better name..
+	renderDeltaFromAPI = delta => {
 		const deltaValue =
 			delta.direction === 'is-undefined-increase'
 				? '-'
@@ -40,6 +42,10 @@ class Stat extends Component {
 				className={ `${ delta.favorable } ${ delta.direction }` }
 			/>
 		);
+	};
+
+	renderDelta = delta => {
+		return <Delta value={ delta.value } className={ delta.classes.join( ' ' ) } />;
 	};
 
 	renderSparkLine = index => {
@@ -67,7 +73,10 @@ class Stat extends Component {
 		}
 
 		const value = data[ index ][ attribute ];
-		const delta = 'statsVisits' === stat ? [] : getDelta( deltas, selectedDate, attribute );
+		const delta =
+			'statsVisits' === stat
+				? getDeltaFromData( data, selectedDate, attribute, unit )
+				: getDelta( deltas, selectedDate, attribute );
 
 		return (
 			<div className="stats-widget__box-contents">
@@ -77,7 +86,7 @@ class Stat extends Component {
 						? formatCurrency( value, data[ index ].currency )
 						: Math.round( value * 100 ) / 100 }
 				</span>
-				{ 'statsVisits' !== stat ? this.renderDelta( delta ) : null }
+				{ 'statsVisits' !== stat ? this.renderDeltaFromAPI( delta ) : this.renderDelta( delta ) }
 				{ this.renderSparkLine( index ) }
 			</div>
 		);
@@ -97,7 +106,6 @@ export default connect( ( state, { site, stat, unit } ) => {
 	} );
 
 	const data = 'statsVisits' === stat ? statsData || [] : statsData && statsData.data;
-
 	return {
 		data,
 		deltas: statsData.deltas || {},

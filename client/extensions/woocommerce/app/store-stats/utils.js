@@ -4,7 +4,7 @@
  * External dependencies
  */
 
-import { find, includes, sortBy } from 'lodash';
+import { find, includes, sortBy, forEach } from 'lodash';
 import classnames from 'classnames';
 import { moment } from 'i18n-calypso';
 
@@ -172,6 +172,24 @@ export function formatValue( value, format, code ) {
 export function getDelta( deltas, selectedDate, stat ) {
 	const selectedDeltas = find( deltas, item => item.period === selectedDate );
 	return selectedDeltas[ stat ];
+}
+
+export function getDeltaFromData( data, selectedDate, attr, unit ) {
+	let delta = {};
+	let previousItem = false;
+
+	forEach( data, function( item ) {
+		if ( previousItem ) {
+			if ( item.period === selectedDate ) {
+				delta = calculateDelta( item, previousItem, attr, unit );
+			}
+			previousItem = item;
+		} else {
+			previousItem = item;
+		}
+	} );
+
+	return delta;
 }
 
 export function sortAndTrimEventData( data, limit ) {

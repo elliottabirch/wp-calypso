@@ -141,7 +141,17 @@ class StatsWidget extends Component {
 	};
 
 	renderVisitors = () => {
-		return <div className="stats-widget__box-contents">Visitors</div>;
+		const { site, translate, dashboardTimePeriod } = this.props;
+		return (
+			<Stat
+				site={ site }
+				unit={ dashboardTimePeriod }
+				label={ translate( 'Visitors' ) }
+				stat="statsVisits"
+				attribute="visitors"
+				type="number"
+			/>
+		);
 	};
 
 	renderConversionRate = () => {
@@ -200,7 +210,7 @@ class StatsWidget extends Component {
 		const orderQuery = {
 			unit: dashboardTimePeriod,
 			date: unitOrderAndReferrerDate,
-			quantity: UNITS[ dashboardTimePeriod ].quantity,
+			quantity: UNITS[ dashboardTimePeriod ].quantity, // TODO is this requesting too Much?
 		};
 
 		const referrerQuery = {
@@ -216,12 +226,19 @@ class StatsWidget extends Component {
 			limit: dashboardListLimit,
 		};
 
+		const visitorQuery = {
+			unit: dashboardTimePeriod,
+			date: moment().format( 'YYYY-MM-DD' ),
+			quantity: UNITS[ dashboardTimePeriod ].quantity, // TODO is this requesting too Much? 2 for delta is needed
+		};
+
 		return (
 			<Fragment>
 				<QueryPreferences />
 				<QuerySiteStats statType="statsOrders" siteId={ site.ID } query={ orderQuery } />
 				<QuerySiteStats statType="statsTopEarners" siteId={ site.ID } query={ query } />
 				<QuerySiteStats statType="statsStoreReferrers" siteId={ site.ID } query={ referrerQuery } />
+				<QuerySiteStats statType="statsVisits" siteId={ site.ID } query={ visitorQuery } />
 			</Fragment>
 		);
 	};

@@ -124,6 +124,24 @@ export function getEndPeriod( date, unit ) {
 }
 
 /**
+ * Given a full date YYYY-MM-DD and unit ('day', 'week', 'month', 'year') return the first date
+ * for the period formatted as YYYY-MM-DD
+ *
+ * @param {string} date - string date in YYYY-MM-DD format
+ * @param {string} unit - string representing unit required for API eg. ('day', 'week', 'month', 'year')
+ * @return {string} - YYYY-MM-DD format of the date to be queried
+ */
+export function getStartPeriod( date, unit ) {
+	return unit === 'week'
+		? moment( date )
+				.startOf( 'isoWeek' )
+				.format( 'YYYY-MM-DD' )
+		: moment( date )
+				.startOf( unit )
+				.format( 'YYYY-MM-DD' );
+}
+
+/**
  * Given a value and format option of 'text', 'number' and 'currency' return a formatted value.
  *
  * @param {(string|number)} value - string or number to be formatted

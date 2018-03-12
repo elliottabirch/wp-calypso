@@ -17,6 +17,7 @@ import { getSiteStatsNormalizedData } from 'state/stats/lists/selectors';
 import {
 	getUnitPeriod,
 	getStartDate,
+	getStartPeriod,
 	getDelta,
 	getEndPeriod,
 } from 'woocommerce/app/store-stats/utils';
@@ -50,21 +51,23 @@ class Stat extends Component {
 	};
 
 	render() {
-		const { label, unit, site, attribute, type, data, deltas } = this.props;
+		const { label, unit, site, attribute, type, data, deltas, stat } = this.props;
 
-		const selectedDate = getEndPeriod( moment().format( 'YYYY-MM-DD' ), unit );
+		const selectedDate =
+			'statsVisits' === stat
+				? getStartPeriod( moment().format( 'YYYY-MM-DD' ), unit )
+				: getEndPeriod( moment().format( 'YYYY-MM-DD' ), unit );
 
 		if ( ! data.length || ! site.ID ) {
 			return null;
 		}
-
 		const index = findIndex( data, d => d.period === selectedDate );
 		if ( ! data[ index ] ) {
 			return null;
 		}
 
 		const value = data[ index ][ attribute ];
-		const delta = getDelta( deltas, selectedDate, attribute );
+		const delta = 'statsVisits' === stat ? [] : getDelta( deltas, selectedDate, attribute );
 
 		return (
 			<div className="stats-widget__box-contents">
@@ -74,7 +77,7 @@ class Stat extends Component {
 						? formatCurrency( value, data[ index ].currency )
 						: Math.round( value * 100 ) / 100 }
 				</span>
-				{ this.renderDelta( delta ) }
+				{ 'statsVisits' !== stat ? this.renderDelta( delta ) : null }
 				{ this.renderSparkLine( index ) }
 			</div>
 		);
@@ -82,18 +85,21 @@ class Stat extends Component {
 }
 
 export default connect( ( state, { site, stat, unit } ) => {
-	const unitQueryDate = getUnitPeriod(
-		getStartDate( moment().format( 'YYYY-MM-DD' ), unit ),
-		unit
-	);
+	const unitQueryDate =
+		'statsVisits' === stat
+			? moment().format( 'YYYY-MM-DD' )
+			: getUnitPeriod( getStartDate( moment().format( 'YYYY-MM-DD' ), unit ), unit );
+
 	const statsData = getSiteStatsNormalizedData( state, site.ID, stat, {
 		unit,
 		date: unitQueryDate,
 		quantity: UNITS[ unit ].quantity,
 	} );
 
+	const data = 'statsVisits' === stat ? statsData || [] : statsData && statsData.data;
+
 	return {
-		data: statsData.data,
+		data,
 		deltas: statsData.deltas || {},
 	};
 } )( Stat );

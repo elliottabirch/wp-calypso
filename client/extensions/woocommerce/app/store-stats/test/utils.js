@@ -15,6 +15,7 @@ import {
 	formatValue,
 	getDelta,
 	getEndPeriod,
+	getStartPeriod,
 	getQueryDate,
 	getUnitPeriod,
 } from '../utils';
@@ -178,6 +179,29 @@ describe( 'getEndPeriod', () => {
 	} );
 	test( 'should return an the date for the end of the day', () => {
 		const queryDate = getEndPeriod( '2017-07-05', 'day' );
+		assert.strictEqual( queryDate, '2017-07-05' );
+	} );
+} );
+
+describe( 'getStartPeriod', () => {
+	test( 'should return a string', () => {
+		const queryDate = getStartPeriod( '2017-07-05', 'week' );
+		assert.isString( queryDate );
+	} );
+	test( 'should return an the date for the first of the week', () => {
+		const queryDate = getStartPeriod( '2017-07-09', 'week' );
+		assert.strictEqual( queryDate, '2017-07-03' );
+	} );
+	test( 'should return an the date for the first of the month', () => {
+		const queryDate = getStartPeriod( '2017-07-05', 'month' );
+		assert.strictEqual( queryDate, '2017-07-01' );
+	} );
+	test( 'should return an the date for the start of the year', () => {
+		const queryDate = getStartPeriod( '2017-07-05', 'year' );
+		assert.strictEqual( queryDate, '2017-01-01' );
+	} );
+	test( 'should return an the date for the start of the day', () => {
+		const queryDate = getStartPeriod( '2017-07-05', 'day' );
 		assert.strictEqual( queryDate, '2017-07-05' );
 	} );
 } );

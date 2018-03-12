@@ -4,7 +4,7 @@
  * External dependencies
  */
 
-import { find, includes, sortBy, forEach } from 'lodash';
+import { find, includes, sortBy, forEach, sumBy } from 'lodash';
 import classnames from 'classnames';
 import { moment } from 'i18n-calypso';
 
@@ -174,6 +174,7 @@ export function getDelta( deltas, selectedDate, stat ) {
 	return selectedDeltas[ stat ];
 }
 
+// TODO Add Tests
 export function getDeltaFromData( data, selectedDate, attr, unit ) {
 	let delta = {};
 	let previousItem = false;
@@ -190,6 +191,22 @@ export function getDeltaFromData( data, selectedDate, attr, unit ) {
 	} );
 
 	return delta;
+}
+
+// TODO Add Tests
+export function getProductConversionRateData( visitorData, actionData, unit ) {
+	return visitorData.map( visitorRow => {
+		const datePeriod = getUnitPeriod( visitorRow.period, unit );
+		const actionRows = find( actionData, action => action.date === datePeriod );
+		if ( visitorRow.visitors > 0 && actionRows && actionRows.data ) {
+			return {
+				period: datePeriod,
+				addToCarts: sumBy( actionRows.data, 'add_to_carts' ) / visitorRow.visitors * 100,
+				productPurchases: sumBy( actionRows.data, 'product_purchases' ) / visitorRow.visitors * 100,
+			};
+		}
+		return { period: datePeriod, addToCarts: 0, productPurchases: 0 };
+	} );
 }
 
 export function sortAndTrimEventData( data, limit ) {

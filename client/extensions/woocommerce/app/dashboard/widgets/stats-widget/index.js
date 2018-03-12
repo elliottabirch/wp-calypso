@@ -22,6 +22,7 @@ import QuerySiteStats from 'components/data/query-site-stats';
 import { savePreference } from 'state/preferences/actions';
 import SelectDropdown from 'components/select-dropdown';
 import Stat from './stat';
+import ConversionRate from './conversion-rate';
 
 import { getUnitPeriod, getStartDate } from 'woocommerce/app/store-stats/utils';
 import { UNITS, dashboardListLimit } from 'woocommerce/app/store-stats/constants';
@@ -155,7 +156,8 @@ class StatsWidget extends Component {
 	};
 
 	renderConversionRate = () => {
-		return <div className="stats-widget__box-contents">Conversion Rates</div>;
+		const { site, dashboardTimePeriod } = this.props;
+		return <ConversionRate site={ site } unit={ dashboardTimePeriod } />;
 	};
 
 	renderReferrers = () => {
@@ -219,6 +221,12 @@ class StatsWidget extends Component {
 			quantity: 1,
 		};
 
+		const productEventsQuery = {
+			unit: dashboardTimePeriod,
+			date: unitOrderAndReferrerDate,
+			quantity: UNITS[ dashboardTimePeriod ].quantity,
+		};
+
 		const unitDate = getUnitPeriod( moment().format( 'YYYY-MM-DD' ), dashboardTimePeriod );
 		const query = {
 			unit: dashboardTimePeriod,
@@ -238,6 +246,11 @@ class StatsWidget extends Component {
 				<QuerySiteStats statType="statsOrders" siteId={ site.ID } query={ orderQuery } />
 				<QuerySiteStats statType="statsTopEarners" siteId={ site.ID } query={ query } />
 				<QuerySiteStats statType="statsStoreReferrers" siteId={ site.ID } query={ referrerQuery } />
+				<QuerySiteStats
+					statType="statsStoreProductEvents"
+					siteId={ site.ID }
+					query={ productEventsQuery }
+				/>
 				<QuerySiteStats statType="statsVisits" siteId={ site.ID } query={ visitorQuery } />
 			</Fragment>
 		);

@@ -300,6 +300,7 @@ export function parseUnitPeriods( unit, period ) {
 	}
 }
 
+// TODO Rename this to something like parseStoreEvents
 export function parseStoreStatsReferrers( payload ) {
 	if ( ! payload || ! payload.data || ! payload.fields || ! Array.isArray( payload.data ) ) {
 		return [];
@@ -873,6 +874,10 @@ export const normalizers = {
 	},
 
 	statsStoreReferrers( payload ) {
+		return parseStoreStatsReferrers( payload );
+	},
+
+	statsStoreProductEvents( payload ) {
 		return parseStoreStatsReferrers( payload );
 	},
 

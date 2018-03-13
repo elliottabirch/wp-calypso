@@ -157,7 +157,9 @@ class StatsWidget extends Component {
 
 	renderConversionRate = () => {
 		const { site, dashboardTimePeriod } = this.props;
-		return <ConversionRate site={ site } unit={ dashboardTimePeriod } />;
+		return (
+			<ConversionRate site={ site } unit={ dashboardTimePeriod } attribute="productPurchases" />
+		);
 	};
 
 	renderReferrers = () => {

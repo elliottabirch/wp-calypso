@@ -4,7 +4,7 @@
  * External dependencies
  */
 
-import { find, includes, sortBy, forEach, sumBy } from 'lodash';
+import { find, includes, sortBy, forEach, sumBy, round } from 'lodash';
 import classnames from 'classnames';
 import { moment } from 'i18n-calypso';
 
@@ -174,15 +174,27 @@ export function getDelta( deltas, selectedDate, stat ) {
 	return selectedDeltas[ stat ];
 }
 
-// TODO Add Tests
-export function getDeltaFromData( data, selectedDate, attr, unit ) {
+/**
+ * Given a date, an array of data, and a stat, return a delta object for the specific stat.
+ *
+ * @param {array} data - an array of API data, must contain at least 3 rows
+ * @param {string} selectedDate - string of date in 'YYYY-MM-DD'
+ * @param {string} stat - string of stat to be referenced
+ * @param {string} unit - unit/period format for the data provided
+ * @return {object} - Object containing data from calculateDelta
+ */
+export function getDeltaFromData( data, selectedDate, stat, unit ) {
+	if ( data.length < 3 ) {
+		return {};
+	}
+
 	let delta = {};
 	let previousItem = false;
 
 	forEach( data, function( item ) {
 		if ( previousItem ) {
 			if ( item.period === selectedDate ) {
-				delta = calculateDelta( item, previousItem, attr, unit );
+				delta = calculateDelta( item, previousItem, stat, unit );
 			}
 			previousItem = item;
 		} else {
@@ -193,7 +205,14 @@ export function getDeltaFromData( data, selectedDate, attr, unit ) {
 	return delta;
 }
 
-// TODO Add Tests
+/**
+ * Given visitor data and event data, get a list conversion rate by period.
+ *
+ * @param {array} visitorData - an array of API data from the 'visits' stat endpoint
+ * @param {array} actionData -  an array of API data from the 'events-by-product' endpoint
+ * @param {string} unit - unit/period format for the data provided
+ * @return {object} - Object containing data from calculateDelta
+ */
 export function getProductConversionRateData( visitorData, actionData, unit ) {
 	return visitorData.map( visitorRow => {
 		const datePeriod = getUnitPeriod( visitorRow.period, unit );
@@ -201,16 +220,29 @@ export function getProductConversionRateData( visitorData, actionData, unit ) {
 		if ( visitorRow.visitors > 0 && actionRows && actionRows.data ) {
 			return {
 				period: datePeriod,
-				addToCarts: sumBy( actionRows.data, 'add_to_carts' ) / visitorRow.visitors * 100,
-				productPurchases: sumBy( actionRows.data, 'product_purchases' ) / visitorRow.visitors * 100,
+				addToCarts: round(
+					sumBy( actionRows.data, 'add_to_carts' ) / visitorRow.visitors * 100,
+					2
+				),
+				productPurchases: round(
+					sumBy( actionRows.data, 'product_purchases' ) / visitorRow.visitors * 100,
+					2
+				),
 			};
 		}
 		return { period: datePeriod, addToCarts: 0, productPurchases: 0 };
 	} );
 }
 
-// TODO Add Tests
-export function sortAndTrimEventData( data, limit, date ) {
+/**
+ * Given referrer data, and a selected date, sort referrers by sales and return based on limit.
+ *
+ * @param {array} data -  an array of API data from the 'events-by-referrer' endpoint
+ * @param {string} date - string of date
+ * @param {number} limit - Number of items to limit by, default 5.
+ * @return {array} - Array of ordered referrer rows
+ */
+export function sortAndTrimReferrerData( data, date, limit = 5 ) {
 	const row = find( data, d => d.date === date );
-	return sortBy( row.data, r => -r.sales ).slice( 0, limit || 5 );
+	return ( row && sortBy( row.data, r => -r.sales ).slice( 0, limit ) ) || [];
 }

@@ -15,7 +15,7 @@ import { getSiteStatsNormalizedData } from 'state/stats/lists/selectors';
 import Table from 'woocommerce/components/table';
 import TableRow from 'woocommerce/components/table/table-row';
 import TableItem from 'woocommerce/components/table/table-item';
-import { formatValue, sortAndTrimEventData } from '../utils';
+import { formatValue, sortAndTrimReferrerData } from '../utils';
 
 const StoreStatsList = ( { data, values } ) => {
 	const titles = (
@@ -54,7 +54,7 @@ export default connect( ( state, { siteId, statType, query, limit } ) => {
 	const normalizedData = getSiteStatsNormalizedData( state, siteId, statType, query );
 	const data =
 		'statsStoreReferrers' === statType
-			? sortAndTrimEventData( normalizedData, limit, query.date )
+			? sortAndTrimReferrerData( normalizedData, query.date, limit )
 			: normalizedData;
 	return {
 		data,

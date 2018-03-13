@@ -3,7 +3,7 @@
 /**
  * External dependencies
  */
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import { moment } from 'i18n-calypso';
 
 /**
@@ -14,10 +14,14 @@ import {
 	calculateDelta,
 	formatValue,
 	getDelta,
+	getDeltaFromData,
+	getProductConversionRateData,
+	getStartDate,
 	getEndPeriod,
 	getStartPeriod,
 	getQueryDate,
 	getUnitPeriod,
+	sortAndTrimReferrerData,
 } from '../utils';
 
 describe( 'calculateDelta', () => {
@@ -132,6 +136,68 @@ describe( 'getQueryDate', () => {
 		const queryDate = getQueryDate( context );
 		const todayShouldBe = moment()
 			.subtract( quantity * 2, 'weeks' )
+			.format( 'YYYY-MM-DD' );
+		assert.strictEqual( queryDate, todayShouldBe );
+	} );
+} );
+
+describe( 'getStartDate', () => {
+	test( 'should return a string', () => {
+		const queryDate = getStartDate( '2017-06-12', 'day' );
+		assert.isString( queryDate );
+	} );
+
+	test( 'should return a value for today given an undefined startDate queryParameter', () => {
+		const today = moment().format( 'YYYY-MM-DD' );
+		const queryDate = getStartDate( undefined, 'day' );
+		assert.strictEqual( queryDate, today );
+	} );
+
+	test( 'should return a value for today given a startDate of less than the quantity', () => {
+		const quantity = UNITS.day.quantity;
+		const startDate = moment()
+			.subtract( Math.floor( quantity / 2 ), 'days' )
+			.format( 'YYYY-MM-DD' );
+		const queryDate = getStartDate( startDate, 'day' );
+		const today = moment().format( 'YYYY-MM-DD' );
+		assert.strictEqual( queryDate, today );
+	} );
+
+	test( 'should return a value going back only in multiples of the specified quantity', () => {
+		const quantity = UNITS.day.quantity;
+		const daysBack = Math.floor( quantity * 2.5 ); // 75
+		const startDate = moment()
+			.subtract( daysBack, 'days' )
+			.format( 'YYYY-MM-DD' );
+		const queryDate = getStartDate( startDate, 'day' );
+		const todayShouldBe = moment()
+			.subtract( quantity * 2, 'days' )
+			.format( 'YYYY-MM-DD' );
+		assert.strictEqual( queryDate, todayShouldBe );
+	} );
+
+	test( 'should calculate with weeks', () => {
+		const quantity = UNITS.week.quantity;
+		const weeksBack = Math.floor( quantity * 2.5 ); // 75
+		const startDate = moment()
+			.subtract( weeksBack, 'weeks' )
+			.format( 'YYYY-MM-DD' );
+		const queryDate = getStartDate( startDate, 'week' );
+		const todayShouldBe = moment()
+			.subtract( quantity * 2, 'weeks' )
+			.format( 'YYYY-MM-DD' );
+		assert.strictEqual( queryDate, todayShouldBe );
+	} );
+
+	test( 'should calculate with months', () => {
+		const quantity = UNITS.month.quantity;
+		const weeksBack = Math.floor( quantity * 2.5 );
+		const startDate = moment()
+			.subtract( weeksBack, 'months' )
+			.format( 'YYYY-MM-DD' );
+		const queryDate = getStartDate( startDate, 'month' );
+		const todayShouldBe = moment()
+			.subtract( quantity * 2, 'months' )
 			.format( 'YYYY-MM-DD' );
 		assert.strictEqual( queryDate, todayShouldBe );
 	} );
@@ -277,5 +343,176 @@ describe( 'getDelta', () => {
 		const delta = getDelta( deltas, '2017-07-06', 'right' );
 		assert.strictEqual( delta.right, true );
 		assert.strictEqual( delta.period, '2017-07-06' );
+	} );
+} );
+
+const visitorData = [
+	{ visitors: 11735, period: '2018-01-01' },
+	{ visitors: 18513, period: '2018-02-01' },
+	{ visitors: 21110, period: '2018-03-01' },
+];
+
+describe( 'getDeltaFromData', () => {
+	test( 'should return an Object', () => {
+		const delta = getDeltaFromData( visitorData, '2018-03-01', 'visitors', 'month' );
+		assert.isObject( delta );
+	} );
+	test( 'should return empty if less than 3 data points are provided', () => {
+		const delta = getDeltaFromData( visitorData.slice( 0, 1 ), '2018-01-01', 'visitors', 'month' );
+		expect( delta ).to.eql( {} );
+	} );
+	test( 'should return empty if the selected date cannot be found', () => {
+		const delta = getDeltaFromData( visitorData, '2018-04-01', 'visitors', 'month' );
+		expect( delta ).to.eql( {} );
+	} );
+	test( 'should return the correct delta', () => {
+		const delta = getDeltaFromData( visitorData, '2018-03-01', 'visitors', 'month' );
+		assert.include( delta.classes, 'is-favorable' );
+		assert.include( delta.classes, 'is-increase' );
+		assert.equal( delta.value, '14%' );
+	} );
+} );
+
+const productData = [
+	{
+		date: '2018-01',
+		data: [
+			{ product_id: 793, add_to_carts: 203, product_purchases: 8 },
+			{ product_id: 802, add_to_carts: 101, product_purchases: 10 },
+		],
+	},
+	{
+		date: '2018-02',
+		data: [
+			{ product_id: 802, add_to_carts: 295, product_purchases: 12 },
+			{ product_id: 805, add_to_carts: 10, product_purchases: 1 },
+		],
+	},
+	{
+		date: '2018-03',
+		data: [
+			{ product_id: 793, add_to_carts: 500, product_purchases: 100 },
+			{ product_id: 802, add_to_carts: 50, product_purchases: 10 },
+		],
+	},
+];
+
+describe( 'getProductConversionRateData', () => {
+	test( 'should return an Array', () => {
+		const data = getProductConversionRateData( visitorData, productData, 'month' );
+		assert.isArray( data );
+	} );
+	test( 'should return the correct conversion rate', () => {
+		const data = getProductConversionRateData( visitorData, productData, 'month' );
+		/*
+			2018-01
+				( total add to carts [203 + 101] ) / visitors [11735] ) * 100 = 2.59
+				( total product purchases [8 + 10] ) / visitors [11735] ) * 100 = 0.15
+			2018-02
+				( total add to carts [295 + 10] ) / visitors [18513] ) * 100 = 1.65
+				( total product purchases [12 + 1 ] ) / visitors [18513] ) * 100 = 0.07
+			 2018-03
+			 	( total add to carts [295 + 10] ) / visitors [18513] ) * 100 = 1.65
+				( total product purchases [100 + 10 ] ) / visitors [21110] ) * 100 = 0.52
+		*/
+		expect( data ).to.eql( [
+			{
+				period: '2018-01',
+				addToCarts: 2.59,
+				productPurchases: 0.15,
+			},
+			{
+				period: '2018-02',
+				addToCarts: 1.65,
+				productPurchases: 0.07,
+			},
+			{
+				period: '2018-03',
+				addToCarts: 2.61,
+				productPurchases: 0.52,
+			},
+		] );
+	} );
+	test( 'should return zero rates if there are no visitors logged', () => {
+		const _visitorData = [
+			{ visitors: 0, period: '2018-01-01' },
+			{ visitors: 18513, period: '2018-02-01' },
+			{ visitors: 21110, period: '2018-03-01' },
+		];
+		const data = getProductConversionRateData( _visitorData, productData, 'month' );
+		expect( data ).to.eql( [
+			{
+				period: '2018-01',
+				addToCarts: 0,
+				productPurchases: 0,
+			},
+			{
+				period: '2018-02',
+				addToCarts: 1.65,
+				productPurchases: 0.07,
+			},
+			{
+				period: '2018-03',
+				addToCarts: 2.61,
+				productPurchases: 0.52,
+			},
+		] );
+	} );
+	test( 'should return zero rates if product data is not logged', () => {
+		const data = getProductConversionRateData( visitorData, [], 'month' );
+		expect( data ).to.eql( [
+			{
+				period: '2018-01',
+				addToCarts: 0,
+				productPurchases: 0,
+			},
+			{
+				period: '2018-02',
+				addToCarts: 0,
+				productPurchases: 0,
+			},
+			{
+				period: '2018-03',
+				addToCarts: 0,
+				productPurchases: 0,
+			},
+		] );
+	} );
+} );
+
+const referrerData = [
+	{
+		date: '2018-03',
+		data: [
+			{ referrer: 'facebook.com', product_views: 649, sales: 40 },
+			{ referrer: 'organic', product_views: 5178, sales: 514 },
+			{ referrer: 'mail.yahoo.com', product_views: 50, sales: 2 },
+			{ referrer: 'google.com', product_views: 26, sales: 5 },
+			{ referrer: 'wordpress.com', product_views: 10, sales: 0 },
+			{ referrer: 'instagram.com', product_views: 52, sales: 4 },
+		],
+	},
+];
+
+describe( 'sortAndTrimReferrerData', () => {
+	test( 'should return an Array', () => {
+		const data = sortAndTrimReferrerData( referrerData, '2018-03' );
+		assert.isArray( data );
+	} );
+	test( 'should return empty for a date that does not exist', () => {
+		const data = sortAndTrimReferrerData( referrerData, '2018-02' );
+		expect( data ).to.eql( [] );
+	} );
+	test( 'should return 5 results by default', () => {
+		const data = sortAndTrimReferrerData( referrerData, '2018-03' );
+		assert.equal( data.length, 5 );
+	} );
+	test( 'should sort and trim', () => {
+		const data = sortAndTrimReferrerData( referrerData, '2018-03', 3 );
+		expect( data ).to.eql( [
+			{ referrer: 'organic', product_views: 5178, sales: 514 },
+			{ referrer: 'facebook.com', product_views: 649, sales: 40 },
+			{ referrer: 'google.com', product_views: 26, sales: 5 },
+		] );
 	} );
 } );

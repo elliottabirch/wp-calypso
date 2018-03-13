@@ -6,7 +6,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { moment, localize } from 'i18n-calypso';
-import { findIndex, round } from 'lodash';
+import { findIndex } from 'lodash';
 
 /**
  * Internal dependencies
@@ -57,7 +57,7 @@ class Stat extends Component {
 		return (
 			<div className="stats-widget__box-contents">
 				<p>{ translate( 'Conversion Rates' ) }</p>
-				<span>{ round( value, 2 ) }%</span>
+				<span>{ value }%</span>
 				{ this.renderDelta( delta ) }
 				{ this.renderSparkLine( index ) }
 			</div>

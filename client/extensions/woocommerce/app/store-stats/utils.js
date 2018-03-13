@@ -209,6 +209,8 @@ export function getProductConversionRateData( visitorData, actionData, unit ) {
 	} );
 }
 
-export function sortAndTrimEventData( data, limit ) {
-	return sortBy( data, d => -d.sales ).slice( 0, limit || 5 );
+// TODO Add Tests
+export function sortAndTrimEventData( data, limit, date ) {
+	const row = find( data, d => d.date === date );
+	return sortBy( row.data, r => -r.sales ).slice( 0, limit || 5 );
 }

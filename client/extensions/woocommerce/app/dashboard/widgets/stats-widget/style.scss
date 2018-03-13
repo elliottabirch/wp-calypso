@@ -43,6 +43,7 @@
 
 	.stats-widget__box-contents {
 		flex: 1 0 50%;
+		max-width: 50%;
 		box-sizing: border-box;
 		border-bottom: 1px solid $gray-lighten-30;
 		padding: 8px;
